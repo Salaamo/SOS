@@ -91,8 +91,21 @@ const EditAcc = async (req, res) => {
     if (!FullName || !Email || !Password) {
       res.status(400).send({ message: "All Fields are mandatory" });
     } else {
-      res.status(200).send({ message: "Editing account" });
+      try {
+        const hashPassword = await bcrypt.hash(Password, 10);
+        const validateUsers = await userModel.findByIdAndUpdate(
+          {Email: user.Email},
+          {FullName, Email, Password: hashPassword},
+          {new: true}
+        );
+        if (validateUsers) {
+          res.status(200).send({message: "Account Updated Successfully", status: "success"});
+        }else{
+          res.status(400).send({message: "Error Updating Account", status: "failed"});
+        }
+      } catch (error) {
+        res.status(500).send({message: "Internal server error"});
+      }
     }
 };
-
 module.exports = { SignUp, Login, EditAcc };
